@@ -1,6 +1,7 @@
 require 'sidekiq'
 require File.join(File.dirname(__FILE__), "..", "config", "environment")
-DEFAULT_SOCKET_PATH ="/var/run/dokku-daemon/dokku-daemon.sock"
+DEFAULT_DOKKU_SOCKET_PATH ="/var/run/dokku-daemon/dokku-daemon.sock"
+DEFAULT_DOCKER_SOCKET_PATH ="/var/run/docker.sock"
 DEFAULT_TIMEOUT = ENV["COMMAND_TIMEOUT"].nil? ? 60 : ENV["COMMAND_TIMEOUT"].to_i
 Sidekiq.configure_server do |config|
   config.redis = { url: ENV["REDIS_URL"] }
@@ -14,7 +15,10 @@ class CommandRunner
     begin
       @command = Command.get!(command_id)
       Timeout.timeout(DEFAULT_TIMEOUT) do
-        socket = UNIXSocket.new(DEFAULT_SOCKET_PATH)
+        socket = UNIXSocket.new(DEFAULT_DOKKU_SOCKET_PATH)
+        if command.command.include? "docker"
+          socket = UNIXSocket.new(DEFAULT_DOCKER_SOCKET_PATH)
+          command.command = command.command.slice! "docker "
         sleep(1) # Give socket 1 sec
         logger.info "[CommandRunner] Sending the command"
         socket.puts(@command.command)
