@@ -16,9 +16,9 @@ class CommandRunner
       @command = Command.get!(command_id)
       Timeout.timeout(DEFAULT_TIMEOUT) do
         socket = UNIXSocket.new(DEFAULT_DOKKU_SOCKET_PATH)
-        if command.command.include? "docker"
+        if @command.command.include? "docker"
           socket = UNIXSocket.new(DEFAULT_DOCKER_SOCKET_PATH)
-          command.command = command.command.slice! "docker "
+          @command.command = command.command.slice! "docker "
         end
         sleep(1) # Give socket 1 sec
         logger.info "[CommandRunner] Sending the command"
