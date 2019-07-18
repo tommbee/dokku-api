@@ -19,6 +19,7 @@ class CommandRunner
         if command.command.include? "docker"
           socket = UNIXSocket.new(DEFAULT_DOCKER_SOCKET_PATH)
           command.command = command.command.slice! "docker "
+        end
         sleep(1) # Give socket 1 sec
         logger.info "[CommandRunner] Sending the command"
         socket.puts(@command.command)
